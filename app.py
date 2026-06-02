@@ -510,24 +510,15 @@ def api_logs(username):
     return jsonify(logs)
 
 
-def bulk_comment_reply_worker(username, reply_text, password):
-    cl = None
+def bulk_comment_reply_worker(username, reply_text):
     with lock:
-        if username in bots:
-            cl = bots[username]["client"]
+        bot = bots.get(username)
 
-    if cl is None:
-        cl = Client()
-        cl.delay_range = [2, 5]
-        session_file = f"session_{username}.json"
-        try:
-            if os.path.exists(session_file):
-                cl.load_settings(session_file)
-            cl.login(username, password)
-            cl.dump_settings(session_file)
-        except Exception as e:
-            add_log(username, f"Bulk reply: login xato: {str(e)[:60]}")
-            return
+    if not bot or not bot.get("running"):
+        add_log(username, "Bulk reply: Bot ishlamayapti. Avval botni ishga tushiring!")
+        return
+
+    cl = bot["client"]
 
     replied_comments_file = f"replied_comments_{username}.json"
     replied_comments = set()
@@ -554,7 +545,7 @@ def bulk_comment_reply_worker(username, reply_text, password):
                 if comment_id in replied_comments:
                     continue
                 try:
-                    time.sleep(3)
+                    time.sleep(12)
                     cl.media_comment(media_id, reply_text, replied_to_comment_id=comment_id)
                     replied_comments.add(comment_id)
                     sent += 1
@@ -577,20 +568,18 @@ def bulk_comment_reply(username):
         flash("Javob matni kiritish shart!", "error")
         return redirect(url_for("keywords_page", username=username))
     data = load_data()
-    account = data["accounts"].get(username)
-    if not account:
+    if username not in data["accounts"]:
         flash("Account topilmadi!", "error")
         return redirect(url_for("index"))
-    password = account.get("password", "")
     t = threading.Thread(
         target=bulk_comment_reply_worker,
-        args=(username, reply_text, password),
+        args=(username, reply_text),
         daemon=True
     )
     t.start()
-    flash(f"Bulk reply ishga tushdi! Loglardan kuzatib boring.", "success")
+    flash("Bulk reply ishga tushdi! Loglardan kuzatib boring.", "success")
     return redirect(url_for("keywords_page", username=username))
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    app.run(host="0.0.0.0", port=5001, debug=False)
