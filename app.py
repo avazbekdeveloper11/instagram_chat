@@ -575,4 +575,4 @@ def bulk_comment_reply(username):
 
 
 if __name__ == "__main__":
-    app.run(debug=False, port=5001)
+    app.run(host="0.0.0.0", port=5001, debug=False)
