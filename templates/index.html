@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- Add Account -->
+<div class="card">
+  <h2>➕ Yangi Account Qo'shish</h2>
+  <form action="/add_account" method="POST">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Instagram Username</label>
+        <input type="text" name="username" placeholder="username (@ belgisisiz)" required>
+      </div>
+      <div class="form-group">
+        <label>Parol</label>
+        <input type="password" name="password" placeholder="Instagram paroli" required>
+      </div>
+      <div style="display:flex; align-items:flex-end;">
+        <button type="submit" class="btn btn-primary">Qo'shish</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- Accounts List -->
+<div class="card">
+  <h2>👤 Accountlar</h2>
+  {% if accounts %}
+  <div class="account-grid">
+    {% for username, acc in accounts.items() %}
+    {% set status = acc.status or 'offline' %}
+    {% set card_class = 'online' if status == 'online' else ('connecting' if 'ulanmoqda' in status else 'offline') %}
+    <div class="account-card {{ card_class }}">
+      <div class="account-header">
+        <span class="account-name">@{{ username }}</span>
+        <span class="badge
+          {% if status == 'online' %}badge-online
+          {% elif 'Xato' in status %}badge-error
+          {% elif 'ulanmoqda' in status %}badge-connecting
+          {% else %}badge-offline{% endif %}"
+          data-badge="{{ username }}">
+          {{ status }}
+        </span>
+      </div>
+      <div class="account-stat" data-stat="{{ username }}">
+        Javob berilgan: {{ acc.messages_replied or 0 }} ta xabar
+      </div>
+      {% if acc.last_check %}
+      <div class="account-stat">Oxirgi tekshiruv: {{ acc.last_check }}</div>
+      {% endif %}
+      <div class="account-actions">
+        {% if status == 'online' or 'ulanmoqda' in status %}
+        <a href="/stop/{{ username }}" class="btn btn-stop btn-sm">⏹ To'xtat</a>
+        {% else %}
+        <a href="/start/{{ username }}" class="btn btn-success btn-sm">▶ Ishga tushir</a>
+        {% endif %}
+        <a href="/keywords/{{ username }}" class="btn btn-info btn-sm">🔑 Kalit so'zlar</a>
+        <a href="/delete_account/{{ username }}" class="btn btn-danger btn-sm"
+           onclick="return confirm('@{{ username }} o\'chirilsinmi?')">🗑 O'chir</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    Hali account qo'shilmagan.<br>Yuqoridagi forma orqali account qo'shing.
+  </div>
+  {% endif %}
+</div>
+
+<!-- Info -->
+<div class="card" style="background: linear-gradient(135deg, #f0f9ff, #e0f2fe);">
+  <h2>ℹ️ Qo'llanma</h2>
+  <ol style="padding-left: 20px; line-height: 2; font-size: 0.88rem; color: #444;">
+    <li>Account qo'shing (username va parol bilan)</li>
+    <li><strong>Kalit so'zlar</strong> tugmasini bosib, kalit so'z va javob yozing</li>
+    <li><strong>Ishga tushir</strong> tugmasini bosing — bot DM larni avtomatik tekshiradi</li>
+    <li>Bot har 10 soniyada yangi xabarlarni tekshiradi</li>
+    <li>Kalit so'z katta yoki kichik harfda yozilsa ham bot aniqlaydi</li>
+  </ol>
+</div>
+
+{% endblock %}

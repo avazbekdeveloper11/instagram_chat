@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Session & sensitive files
+session_*.json
+replied_*.json
+
+# Logs
+*.log
+
+# Data (contains passwords/tokens)
+data.json
+
+# OS
+.DS_Store
+Thumbs.db

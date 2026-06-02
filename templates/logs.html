@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div style="margin-bottom: 16px;">
+  <a href="/" class="back-link">← Bosh sahifaga qaytish</a>
+</div>
+
+<div class="card">
+  <h2>📋 @{{ username }} — Bot Loglari</h2>
+  <p style="font-size:0.82rem; color:#666; margin-bottom:16px;">
+    Status: <strong>{{ account.status }}</strong> &nbsp;|&nbsp;
+    Javob: <strong>{{ account.messages_replied or 0 }}</strong> ta
+    &nbsp;|&nbsp;
+    <a href="/logs/{{ username }}" style="color:#833ab4;">🔄 Yangilash</a>
+    &nbsp;|&nbsp;
+    <a href="/keywords/{{ username }}" style="color:#3b82f6;">🔑 Kalit so'zlar</a>
+  </p>
+
+  <div id="log-box" style="
+    background: #0f172a; color: #94a3b8; font-family: monospace;
+    font-size: 0.82rem; padding: 16px; border-radius: 10px;
+    height: 450px; overflow-y: auto; line-height: 1.7;
+  ">
+    {% if logs %}
+      {% for line in logs|reverse %}
+      <div style="border-bottom: 1px solid #1e293b; padding: 2px 0;">
+        {% if 'XATO' in line or 'xato' in line %}
+          <span style="color: #f87171;">{{ line }}</span>
+        {% elif 'muvaffaqiyatli' in line or 'Javob yuborildi' in line %}
+          <span style="color: #4ade80;">{{ line }}</span>
+        {% elif 'Yangi xabar' in line or 'Mos keldi' in line %}
+          <span style="color: #fbbf24;">{{ line }}</span>
+        {% else %}
+          {{ line }}
+        {% endif %}
+      </div>
+      {% endfor %}
+    {% else %}
+      <span style="color:#475569;">Hali log yo'q. Bot ishga tushirilgandan keyin bu yerda ko'rinadi.</span>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card" style="background:#fef9c3; border: 2px solid #fde047;">
+  <h2>⚠️ Muhim eslatma</h2>
+  <ul style="padding-left:20px; line-height:2; font-size:0.88rem; color:#555;">
+    <li>Bot faqat <strong>DM (Direct Message)</strong> larni tekshiradi — post kommentlarini emas!</li>
+    <li>Kimdir sizga DM yozib, xabarda kalit so'z bo'lsa, bot javob beradi</li>
+    <li>Instagram ba'zan <strong>challenge (tasdiqlash)</strong> so'rashi mumkin — logda ko'rinadi</li>
+    <li>Agar status "Xato: challenge_required" bo'lsa — telefonda Instagram ilovasiga kirib tasdiqlang</li>
+    <li>2FA yoqilgan bo'lsa avval o'chiring yoki <a href="/2fa">2FA qo'llab-quvvatlash</a> ishlatng</li>
+  </ul>
+</div>
+
+<script>
+  // Auto-refresh logs every 5 seconds
+  setInterval(() => {
+    fetch('/api/logs/{{ username }}').then(r => r.json()).then(logs => {
+      const box = document.getElementById('log-box');
+      if (!logs.length) return;
+      box.innerHTML = [...logs].reverse().map(line => {
+        let color = '#94a3b8';
+        if (line.includes('XATO') || line.includes('xato')) color = '#f87171';
+        else if (line.includes('muvaffaqiyatli') || line.includes('Javob yuborildi')) color = '#4ade80';
+        else if (line.includes('Yangi xabar') || line.includes('Mos keldi')) color = '#fbbf24';
+        return `<div style="border-bottom:1px solid #1e293b;padding:2px 0;"><span style="color:${color}">${line}</span></div>`;
+      }).join('');
+    });
+  }, 5000);
+</script>
+
+{% endblock %}

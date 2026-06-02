@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Instagram ChatBot</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container { max-width: 900px; margin: 0 auto; }
+
+    .header {
+      text-align: center;
+      color: white;
+      margin-bottom: 30px;
+    }
+    .header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 4px; }
+    .header p { opacity: 0.85; font-size: 0.95rem; }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    }
+    .card h2 { font-size: 1.1rem; color: #333; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+
+    .form-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .form-group { flex: 1; min-width: 150px; }
+    .form-group label { display: block; font-size: 0.8rem; color: #666; margin-bottom: 5px; font-weight: 500; }
+    input[type=text], input[type=password], textarea {
+      width: 100%; padding: 10px 14px; border: 2px solid #eee;
+      border-radius: 10px; font-size: 0.9rem; transition: border-color 0.2s;
+      font-family: inherit;
+    }
+    input:focus, textarea:focus { outline: none; border-color: #833ab4; }
+    textarea { resize: vertical; min-height: 60px; }
+
+    .btn {
+      padding: 10px 20px; border: none; border-radius: 10px;
+      font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+      text-decoration: none; display: inline-block;
+    }
+    .btn-primary { background: linear-gradient(135deg, #833ab4, #fd1d1d); color: white; }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-success { background: #22c55e; color: white; }
+    .btn-success:hover { background: #16a34a; }
+    .btn-danger { background: #ef4444; color: white; font-size: 0.8rem; padding: 6px 14px; }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-stop { background: #f97316; color: white; font-size: 0.8rem; padding: 6px 14px; }
+    .btn-info { background: #3b82f6; color: white; font-size: 0.8rem; padding: 6px 14px; }
+    .btn-info:hover { background: #2563eb; }
+    .btn-sm { font-size: 0.78rem; padding: 5px 12px; }
+
+    .account-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+    .account-card {
+      border: 2px solid #f0f0f0; border-radius: 12px; padding: 18px;
+      transition: border-color 0.2s;
+    }
+    .account-card.online { border-color: #22c55e; }
+    .account-card.offline { border-color: #e5e7eb; }
+    .account-card.connecting { border-color: #f59e0b; }
+
+    .account-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .account-name { font-weight: 700; font-size: 1rem; color: #1a1a1a; }
+    .badge {
+      font-size: 0.72rem; padding: 3px 10px; border-radius: 20px; font-weight: 600;
+    }
+    .badge-online { background: #dcfce7; color: #15803d; }
+    .badge-offline { background: #f3f4f6; color: #6b7280; }
+    .badge-connecting { background: #fef3c7; color: #92400e; }
+    .badge-error { background: #fee2e2; color: #991b1b; }
+
+    .account-stat { font-size: 0.82rem; color: #666; margin-bottom: 4px; }
+    .account-actions { display: flex; gap: 6px; margin-top: 14px; flex-wrap: wrap; }
+
+    .flash-messages { margin-bottom: 16px; }
+    .flash {
+      padding: 12px 16px; border-radius: 10px; margin-bottom: 8px;
+      font-size: 0.88rem; font-weight: 500;
+    }
+    .flash-success { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+    .flash-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    .flash-info { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+
+    .back-link { color: white; text-decoration: none; font-size: 0.9rem; opacity: 0.85; }
+    .back-link:hover { opacity: 1; }
+
+    .empty-state { text-align: center; color: #9ca3af; padding: 30px; font-size: 0.9rem; }
+
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px;
+    }
+    .dot-online { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
+    .dot-offline { background: #9ca3af; }
+    .dot-connecting { background: #f59e0b; animation: pulse 1s infinite; }
+
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header" style="position:relative;">
+    <h1>📱 Instagram ChatBot</h1>
+    <p>Avtomatik DM javob tizimi</p>
+    <a href="/logout" style="position:absolute; top:20px; right:20px; color:white; opacity:0.75;
+       font-size:0.82rem; text-decoration:none; background:rgba(0,0,0,0.2);
+       padding:6px 14px; border-radius:20px;">Chiqish</a>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flash-messages">
+    {% for cat, msg in messages %}
+    <div class="flash flash-{{ cat }}">{{ msg }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
+</div>
+
+<script>
+  // Auto-refresh status every 8 seconds
+  setInterval(() => {
+    fetch('/api/status').then(r => r.json()).then(data => {
+      Object.entries(data).forEach(([username, acc]) => {
+        const badge = document.querySelector(`[data-badge="${username}"]`);
+        const dot = document.querySelector(`[data-dot="${username}"]`);
+        const stat = document.querySelector(`[data-stat="${username}"]`);
+        if (badge) {
+          const s = acc.status || 'offline';
+          badge.textContent = s;
+          badge.className = 'badge';
+          if (s === 'online') badge.classList.add('badge-online');
+          else if (s.includes('Xato')) badge.classList.add('badge-error');
+          else if (s.includes('ulanmoqda')) badge.classList.add('badge-connecting');
+          else badge.classList.add('badge-offline');
+        }
+        if (stat && acc.messages_replied !== undefined) {
+          stat.textContent = `Javob berilgan: ${acc.messages_replied} ta xabar`;
+        }
+      });
+    });
+  }, 8000);
+</script>
+</body>
+</html>

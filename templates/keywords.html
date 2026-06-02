@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div style="margin-bottom: 16px;">
+  <a href="/" class="back-link">← Bosh sahifaga qaytish</a>
+</div>
+
+<div class="card">
+  <h2>🔑 @{{ username }} — Kalit So'zlar</h2>
+  <p style="font-size:0.85rem; color:#666; margin-bottom:18px;">
+    Status:
+    <strong style="color: {% if account.status == 'online' %}#16a34a{% else %}#6b7280{% endif %}">
+      {{ account.status or 'offline' }}
+    </strong>
+    &nbsp;|&nbsp; Javob berilgan: <strong>{{ account.messages_replied or 0 }}</strong> xabar
+  </p>
+
+  <!-- Add keyword form -->
+  <form action="/add_keyword/{{ username }}" method="POST">
+    <div style="margin-bottom: 12px;">
+      <label style="font-weight:600; display:block; margin-bottom:4px;">Kalit so'z</label>
+      <input type="text" name="keyword" placeholder="Masalan: app, narx, price..." required
+        style="width:100%; padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:0.9rem;">
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+      <div>
+        <label style="font-weight:600; display:block; margin-bottom:4px;">
+          💬 Comment javob <span style="font-weight:400; color:#888;">(ixtiyoriy)</span>
+        </label>
+        <textarea name="comment_reply" rows="3"
+          placeholder="Commentga yoziladigan matn&#10;Masalan: DM ga yozdim! ✅"
+          style="width:100%; padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:0.9rem; resize:vertical;"></textarea>
+        <small style="color:#888;">Obunachi commentiga avtomatik reply</small>
+      </div>
+      <div>
+        <label style="font-weight:600; display:block; margin-bottom:4px;">
+          📩 DM matni <span style="font-weight:400; color:#888;">(ixtiyoriy)</span>
+        </label>
+        <textarea name="dm_text" rows="3"
+          placeholder="Direktga yoziladigan matn&#10;Masalan: Salom! App havolasi: ..."
+          style="width:100%; padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:0.9rem; resize:vertical;"></textarea>
+        <small style="color:#888;">Obunachiga direktdan yuboriladi</small>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">➕ Qo'shish</button>
+  </form>
+</div>
+
+<!-- Keywords table -->
+<div class="card">
+  <h2>📋 Mavjud Kalit So'zlar ({{ keywords|length }} ta)</h2>
+  {% if keywords %}
+  <div style="overflow-x: auto;">
+    <table style="width:100%; border-collapse: collapse; font-size: 0.88rem;">
+      <thead>
+        <tr style="background: #f8f9fa;">
+          <th style="padding: 10px 14px; text-align:left; border-bottom: 2px solid #eee; width:15%;">Kalit so'z</th>
+          <th style="padding: 10px 14px; text-align:left; border-bottom: 2px solid #eee; width:35%;">💬 Comment javob</th>
+          <th style="padding: 10px 14px; text-align:left; border-bottom: 2px solid #eee; width:40%;">📩 DM matni</th>
+          <th style="padding: 10px 14px; text-align:center; border-bottom: 2px solid #eee; width:80px;">Amal</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for kw in keywords %}
+        <tr style="border-bottom: 1px solid #f0f0f0;">
+          <td style="padding: 12px 14px;">
+            <span style="background: linear-gradient(135deg, #833ab4, #fd1d1d);
+              color: white; padding: 3px 12px; border-radius: 20px; font-weight: 600; font-size: 0.82rem;">
+              {{ kw.keyword }}
+            </span>
+          </td>
+          <td style="padding: 12px 14px; color: #444; white-space: pre-wrap;">
+            {% if kw.comment_reply %}
+              {{ kw.comment_reply }}
+            {% else %}
+              <span style="color:#bbb; font-style:italic;">—</span>
+            {% endif %}
+          </td>
+          <td style="padding: 12px 14px; color: #444; white-space: pre-wrap;">
+            {% if kw.dm_text %}
+              {{ kw.dm_text }}
+            {% elif kw.reply %}
+              {{ kw.reply }}
+            {% else %}
+              <span style="color:#bbb; font-style:italic;">—</span>
+            {% endif %}
+          </td>
+          <td style="padding: 12px 14px; text-align:center;">
+            <a href="/delete_keyword/{{ username }}/{{ loop.index0 }}"
+               class="btn btn-danger"
+               onclick="return confirm('\"{{ kw.keyword }}\" o\'chirilsinmi?')">🗑</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    Hali kalit so'z qo'shilmagan.<br>Yuqoridagi forma orqali qo'shing.
+  </div>
+  {% endif %}
+</div>
+
+<div class="card" style="background: linear-gradient(135deg, #fff7ed, #fef3c7);">
+  <h2>💡 Qanday ishlaydi?</h2>
+  <ul style="padding-left: 20px; line-height: 2.2; font-size: 0.88rem; color: #555;">
+    <li>Obunachi postingizga <strong>kalit so'z</strong> yozgan comment qoldirsa bot uni aniqlaydi</li>
+    <li>Agar <strong>Comment javob</strong> kiritilgan bo'lsa — o'sha commentga reply qiladi</li>
+    <li>Agar <strong>DM matni</strong> kiritilgan bo'lsa — obunachiga direkt xabar yuboradi</li>
+    <li>Ikkisini ham kiritish mumkin — avval comment reply, keyin DM yuboriladi</li>
+    <li>Bir commentga <strong>ikki marta javob bermaydi</strong></li>
+    <li>Postlar har <strong>5 daqiqada</strong> yangilanadi, commentlar har <strong>12 soniyada</strong> tekshiriladi</li>
+  </ul>
+</div>
+
+{% endblock %}
