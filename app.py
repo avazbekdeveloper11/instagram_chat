@@ -363,6 +363,24 @@ def add_account():
     return redirect(url_for("index"))
 
 
+@app.route("/upload_session/<username>", methods=["POST"])
+@login_required
+def upload_session(username):
+    f = request.files.get("session_file")
+    if not f:
+        flash("Fayl tanlanmadi!", "error")
+        return redirect(url_for("index"))
+    try:
+        content = json.loads(f.read().decode("utf-8"))
+        session_file = f"session_{username}.json"
+        with open(session_file, "w", encoding="utf-8") as sf:
+            json.dump(content, sf, indent=2, ensure_ascii=False)
+        flash(f"@{username} session fayl yuklandi!", "success")
+    except Exception as e:
+        flash(f"Xato: {e}", "error")
+    return redirect(url_for("index"))
+
+
 @app.route("/delete_account/<username>")
 @login_required
 def delete_account(username):

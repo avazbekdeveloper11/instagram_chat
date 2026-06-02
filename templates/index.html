@@ -57,6 +57,14 @@
         <a href="/delete_account/{{ username }}" class="btn btn-danger btn-sm"
            onclick="return confirm('@{{ username }} o\'chirilsinmi?')">🗑 O'chir</a>
       </div>
+      <form action="/upload_session/{{ username }}" method="POST" enctype="multipart/form-data"
+            style="margin-top:10px; display:flex; gap:8px; align-items:center;">
+        <input type="file" name="session_file" accept=".json"
+               style="font-size:0.8rem; flex:1;" required>
+        <button type="submit" class="btn btn-sm"
+                style="background:#6366f1; color:white; white-space:nowrap;"
+                onclick="return confirm('Session fayl yuklansinmi?')">📂 Session yuklash</button>
+      </form>
     </div>
     {% endfor %}
   </div>
