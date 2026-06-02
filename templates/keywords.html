@@ -104,6 +104,32 @@
   {% endif %}
 </div>
 
+<div class="card" style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); border-left: 4px solid #16a34a;">
+  <h2>💬 Barcha Commentlarga Javob Yuborish</h2>
+  <p style="font-size:0.87rem; color:#555; margin-bottom:16px;">
+    Postlarizdagi <strong>barcha javob berilmagan commentlarga</strong> bitta xabar yuboriladi.
+    Jarayon fonda ishlaydi — loglardan kuzating.
+  </p>
+  <form action="/bulk_comment_reply/{{ username }}" method="POST">
+    <div style="display:flex; gap:12px; align-items:flex-end;">
+      <div style="flex:1;">
+        <label style="font-weight:600; display:block; margin-bottom:6px;">Javob matni</label>
+        <input type="text" name="reply_text" value="Fikringiz uchun rahmat! 🙏"
+          placeholder="Fikringiz uchun rahmat!"
+          style="width:100%; padding:10px 14px; border:1px solid #bbf7d0; border-radius:8px; font-size:0.95rem; background:#fff;">
+      </div>
+      <button type="submit" class="btn btn-success"
+        onclick="return confirm('Barcha commentlarga javob yuborilsinmi?')"
+        style="white-space:nowrap; padding: 10px 20px;">
+        📨 Yuborish
+      </button>
+    </div>
+    <small style="color:#6b7280; margin-top:8px; display:block;">
+      * Avval javob berilgan commentlarga qayta yozilmaydi
+    </small>
+  </form>
+</div>
+
 <div class="card" style="background: linear-gradient(135deg, #fff7ed, #fef3c7);">
   <h2>💡 Qanday ishlaydi?</h2>
   <ul style="padding-left: 20px; line-height: 2.2; font-size: 0.88rem; color: #555;">

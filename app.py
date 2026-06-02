@@ -492,5 +492,87 @@ def api_logs(username):
     return jsonify(logs)
 
 
+def bulk_comment_reply_worker(username, reply_text, password):
+    cl = None
+    with lock:
+        if username in bots:
+            cl = bots[username]["client"]
+
+    if cl is None:
+        cl = Client()
+        cl.delay_range = [2, 5]
+        session_file = f"session_{username}.json"
+        try:
+            if os.path.exists(session_file):
+                cl.load_settings(session_file)
+            cl.login(username, password)
+            cl.dump_settings(session_file)
+        except Exception as e:
+            add_log(username, f"Bulk reply: login xato: {str(e)[:60]}")
+            return
+
+    replied_comments_file = f"replied_comments_{username}.json"
+    replied_comments = set()
+    if os.path.exists(replied_comments_file):
+        with open(replied_comments_file, "r") as f:
+            replied_comments = set(json.load(f))
+
+    sent = 0
+    try:
+        medias = cl.user_medias(cl.user_id, amount=10)
+        add_log(username, f"Bulk reply: {len(medias)} ta post topildi")
+        for media in medias:
+            media_id = str(media.id)
+            try:
+                comments = cl.media_comments(media_id, amount=50)
+            except Exception as e:
+                add_log(username, f"Bulk reply: comment olishda xato: {str(e)[:50]}")
+                continue
+            for comment in comments:
+                comment_id = str(comment.pk)
+                commenter_id = str(comment.user.pk)
+                if commenter_id == str(cl.user_id):
+                    continue
+                if comment_id in replied_comments:
+                    continue
+                try:
+                    time.sleep(3)
+                    cl.media_comment(media_id, reply_text, replied_to_comment_id=comment_id)
+                    replied_comments.add(comment_id)
+                    sent += 1
+                    add_log(username, f"Bulk reply: @{comment.user.username} ga yuborildi ({sent})")
+                except Exception as e:
+                    add_log(username, f"Bulk reply xato: {str(e)[:60]}")
+
+        with open(replied_comments_file, "w") as f:
+            json.dump(list(replied_comments), f)
+        add_log(username, f"Bulk reply tugadi. Jami {sent} ta commentga javob berildi.")
+    except Exception as e:
+        add_log(username, f"Bulk reply umumiy xato: {str(e)[:60]}")
+
+
+@app.route("/bulk_comment_reply/<username>", methods=["POST"])
+@login_required
+def bulk_comment_reply(username):
+    reply_text = request.form.get("reply_text", "").strip()
+    if not reply_text:
+        flash("Javob matni kiritish shart!", "error")
+        return redirect(url_for("keywords_page", username=username))
+    data = load_data()
+    account = data["accounts"].get(username)
+    if not account:
+        flash("Account topilmadi!", "error")
+        return redirect(url_for("index"))
+    password = account.get("password", "")
+    t = threading.Thread(
+        target=bulk_comment_reply_worker,
+        args=(username, reply_text, password),
+        daemon=True
+    )
+    t.start()
+    flash(f"Bulk reply ishga tushdi! Loglardan kuzatib boring.", "success")
+    return redirect(url_for("keywords_page", username=username))
+
+
 if __name__ == "__main__":
     app.run(debug=False, port=5001)
